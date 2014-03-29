@@ -6,8 +6,11 @@ setup(
     description     ='Trade school everywhere',
     author          ='or zubalsky',
     author_email    ='orzubalsky@gmail.com',
-    package_dir     = {'': 'ts/apps/tradeschool'},
-    packages        = find_packages('ts/apps/tradeschool'),
+    package_dir     = {
+        '': 'ts/apps/tradeschool',
+        'settings': 'ts/settings',
+    },
+    packages        = find_packages('ts/apps/tradeschool') + ['settings'],
     install_requires = [
         'MySQL-python==1.2.3',
         'PIL',
