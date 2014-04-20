@@ -48,7 +48,7 @@ class TimeModelChoiceField(forms.ModelChoiceField):
 class TimeSelectionForm(forms.Form):
     """
     A simple dropdown menu for teachers to select an available time
-    when submitting a class. Constrcuted from a Branch and uses the Time model.
+    when submitting a class. Constructed from a Branch and uses the Time model.
     """
     def __init__(self, branch, **kwargs):
         super(TimeSelectionForm, self).__init__(**kwargs)
