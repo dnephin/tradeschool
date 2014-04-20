@@ -52,10 +52,11 @@ class TimeSelectionForm(forms.Form):
     """
     def __init__(self, branch, **kwargs):
         super(TimeSelectionForm, self).__init__(**kwargs)
+        now = datetime.datetime.utcnow().replace(tzinfo=timezone.utc)
         self.fields['time'].queryset = Time.objects.filter(
             branch=branch,
             is_active=True,
-            start_time__gt=datetime.datetime.now())
+            start_time__gt=now)
 
     time = TimeModelChoiceField(
         queryset=None,
