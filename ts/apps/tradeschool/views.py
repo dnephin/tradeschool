@@ -232,19 +232,16 @@ def course_add(request, branch_slug=None):
     if request.method == 'POST':
         BarterItemFormSet = formset_factory(
             BarterItemForm, extra=5, formset=BaseBarterItemFormSet)
-        barter_item_formset = BarterItemFormSet(data=request.POST, prefix="item", branch=branch)
+        barter_item_formset = BarterItemFormSet(
+            data=request.POST, prefix="item", branch=branch)
         course_form = CourseForm(request.POST, prefix="course")
         teacher_form = TeacherForm(request.POST, prefix="teacher")
-        time_form = TimeSelectionForm(
-            data=request.POST,
-            prefix="time",
-        )
-        time_form.fields['time'].queryset = Time.objects.filter(branch=branch)
+        time_form = TimeSelectionForm(branch, data=request.POST, prefix="time")
 
-        if barter_item_formset.is_valid() \
-                and course_form.is_valid() \
-                and teacher_form.is_valid() \
-                and time_form.is_valid():
+        if all([barter_item_formset.is_valid(),
+                course_form.is_valid(),
+                teacher_form.is_valid(),
+                time_form.is_valid()]):
             # process teacher
             teacher = teacher_form.save(commit=False)
             teacher_data = teacher_form.cleaned_data
@@ -343,8 +340,7 @@ def course_add(request, branch_slug=None):
         barter_item_formset = BarterItemFormSet(prefix="item", branch=branch)
         course_form = CourseForm(prefix="course")
         teacher_form = TeacherForm(prefix="teacher")
-        time_form = TimeSelectionForm(prefix="time")
-        time_form.fields['time'].queryset = Time.objects.filter(branch=branch)
+        time_form = TimeSelectionForm(branch, prefix="time")
 
     view_templates = branch_templates(
         branch, 'course_submit.html', 'subpage.html')

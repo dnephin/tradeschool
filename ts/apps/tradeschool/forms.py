@@ -1,11 +1,15 @@
-from django.forms import *
+import datetime
+
+from django import forms
 from django.forms.formsets import BaseFormSet
+from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 from django.contrib.sites.models import Site
-from tradeschool.models import *
+from tradeschool.models import Branch, Course, Feedback, Person, Time
+from tradeschool.models import BarterItem, Registration
 
 
-class DefaultBranchForm(Form):
+class DefaultBranchForm(forms.Form):
     def __init__(self, user, redirect_to, *args, **kwargs):
         super(DefaultBranchForm, self).__init__(*args, **kwargs)
 
@@ -30,7 +34,6 @@ class DefaultBranchForm(Form):
 
 class TimeModelChoiceField(forms.ModelChoiceField):
     def label_from_instance(self, obj):
-        from django.utils import timezone
 
         current_tz = timezone.get_current_timezone()
         date = obj.start_time.astimezone(current_tz).strftime('%A, %b %d')
@@ -42,18 +45,25 @@ class TimeModelChoiceField(forms.ModelChoiceField):
         return "%s %s" % (date, time)
 
 
-class TimeSelectionForm(Form):
+class TimeSelectionForm(forms.Form):
     """
     A simple dropdown menu for teachers to select an available time
-    when submitting a class. Uses the Time model
+    when submitting a class. Constrcuted from a Branch and uses the Time model.
     """
+    def __init__(self, branch, **kwargs):
+        super(TimeSelectionForm, self).__init__(**kwargs)
+        self.fields['time'].queryset = Time.objects.filter(
+                branch=branch,
+                is_active=True,
+                start_time__gt=datetime.datetime.now())
+
     time = TimeModelChoiceField(
-        queryset=Time.objects.all(),
+        queryset=None,
         error_messages={'required': _('Please select a time'), }
     )
 
 
-class BranchForm(ModelForm):
+class BranchForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(BranchForm, self).__init__(*args, **kwargs)
 
@@ -73,10 +83,10 @@ class BranchForm(ModelForm):
         )
 
 
-class TeacherForm (ModelForm):
+class TeacherForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         "Sets custom meta data to the form's fields"
-        super(ModelForm, self).__init__(*args, **kwargs)
+        super(TeacherForm, self).__init__(*args, **kwargs)
         self.fields['fullname'].error_messages['required'] = _(
             "Please enter your name")
         self.fields['email'].error_messages['required'] = _(
@@ -134,10 +144,10 @@ class OrganizerForm(TeacherForm):
     )
 
 
-class CourseForm (ModelForm):
+class CourseForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         "Sets custom meta data to the form's fields"
-        super(ModelForm, self).__init__(*args, **kwargs)
+        super(CourseForm, self).__init__(*args, **kwargs)
         self.fields['title'].error_messages['required'] = _(
             "Please enter a class title")
         self.fields['description'].error_messages['required'] = _(
@@ -150,10 +160,10 @@ class CourseForm (ModelForm):
         fields = ('title', 'description', 'max_students')
 
 
-class BarterItemForm (ModelForm):
+class BarterItemForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         "Sets custom meta data to the form's fields"
-        super(ModelForm, self).__init__(*args, **kwargs)
+        super(BarterItemForm, self).__init__(*args, **kwargs)
         self.fields['title'].widget.attrs['class'] = 'barter_item'
         self.fields['title'].error_messages['required'] = _(
             "Barter item cannot be blank")
@@ -186,7 +196,7 @@ class BaseBarterItemFormSet(BaseFormSet):
             )
 
 
-class RegistrationForm(ModelForm):
+class RegistrationForm(forms.ModelForm):
     def __init__(self, course, *args, **kwargs):
         super(RegistrationForm, self).__init__(*args, **kwargs)
 
@@ -199,10 +209,10 @@ class RegistrationForm(ModelForm):
     class Meta:
         model = Registration
         fields = ('items', )
-        widgets = {'items': CheckboxSelectMultiple(), }
+        widgets = {'items': forms.CheckboxSelectMultiple(), }
 
 
-class StudentForm(ModelForm):
+class StudentForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(StudentForm, self).__init__(*args, **kwargs)
 
@@ -218,7 +228,7 @@ class StudentForm(ModelForm):
         fields = ('fullname', 'email', 'phone')
 
 
-class FeedbackForm(ModelForm):
+class FeedbackForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super(FeedbackForm, self).__init__(*args, **kwargs)
         self.fields['content'].error_messages['required'] = _(

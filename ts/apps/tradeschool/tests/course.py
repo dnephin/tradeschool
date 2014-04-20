@@ -182,8 +182,8 @@ class CourseTestCase(TestCase):
 
         # these will become not-tz-aware strings, but they should be converted
         # to the branch's timezone
-        start_time = datetime(2030, 02, 02, 10, 0, 0)
-        end_time = datetime(2030, 02, 02, 12, 30, 0)
+        start_time = datetime(2030, 2, 2, 10, 0, 0)
+        end_time = datetime(2030, 2, 2, 12, 30, 0)
 
         # save a new time object
         data = {
@@ -217,7 +217,7 @@ class CourseTestCase(TestCase):
         """
         Tests that a TimeRange saved in the admin backend
         results in the correct number of Time objects
-        with data as it was set in the TimeRange form.
+        w0ith data as it was set in the TimeRange form.
         """
         # timerange count
         previous_timerange_count = TimeRange.objects.all().count()
@@ -231,10 +231,10 @@ class CourseTestCase(TestCase):
         # these will become not-tz-aware strings,
         # but they should be converted to the branch's timezone
         start_time = timezone.make_aware(
-            datetime(2030, 02, 02, 10, 0, 0), timezone.utc)
+            datetime(2030, 2, 2, 10, 0, 0), timezone.utc)
 
         end_time = timezone.make_aware(
-            datetime(2030, 04, 02, 12, 30, 0), timezone.utc)
+            datetime(2030, 4, 2, 12, 30, 0), timezone.utc)
 
         # save a new timerange object
         data = {
@@ -303,10 +303,10 @@ class CourseTestCase(TestCase):
         # these will become not-tz-aware strings, but they should be converted
         # to the branch's timezone
         start_time = timezone.make_aware(
-            datetime(2030, 02, 02, 10, 0, 0), timezone.utc)
+            datetime(2030, 2, 2, 10, 0, 0), timezone.utc)
 
         end_time = timezone.make_aware(
-            datetime(2030, 04, 02, 12, 30, 0), timezone.utc)
+            datetime(2030, 4, 2, 12, 30, 0), timezone.utc)
 
         # save a new timerange object
         data = {
@@ -359,6 +359,30 @@ class CourseTestCase(TestCase):
         response = self.client.get(self.url)
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(self.branch.slug + '/course_add.html')
+
+    def test_view_has_only_active_future_times(self):
+        past = datetime(2013, 1, 1, 1, 2, tzinfo=timezone.utc)
+        future = datetime(2050, 3, 4, 5, 6, tzinfo=timezone.utc)
+        branch = Branch(title='new test branch', slug='time-test-branch')
+        branch.save()
+
+        past_time = build_time(branch, past)
+        past_time.save()
+
+        inactive_time = build_time(branch, future)
+        inactive_time.is_active = False
+        inactive_time.save()
+
+        future_time = build_time(branch, future)
+        future_time.save()
+
+        url = reverse('course-add', kwargs={'branch_slug': branch.slug})
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+
+        form = response.context[0]['time_form']
+        times = form.fields['time'].queryset
+        self.assertEqual(list(times), [future_time])
 
     def test_empty_submission(self):
         """
@@ -744,3 +768,11 @@ class CourseTestCase(TestCase):
 
         # clear cache
         cache.clear()
+
+
+def build_time(branch, start_time):
+    one_hour = timedelta(hours=1)
+    return Time(
+            branch=branch,
+            start_time=start_time,
+            end_time=start_time + one_hour)
