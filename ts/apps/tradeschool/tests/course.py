@@ -5,7 +5,7 @@ from django.core.cache import cache
 from django.contrib.sites.models import Site
 from django.conf import settings
 from django.utils import timezone
-from datetime import *
+from datetime import datetime, timedelta
 from tradeschool.models import *
 
 
@@ -319,7 +319,7 @@ class CourseTestCase(TestCase):
             'venue': self.branch.venue_set.all()[0].pk
         }
 
-        response = self.client.post(url, data=data, follow=True)
+        self.client.post(url, data=data, follow=True)
 
         # verify a new timerange was saved
         current_timerange_count = TimeRange.objects.all().count()
@@ -511,8 +511,7 @@ class CourseTestCase(TestCase):
         time = Time.objects.get(pk=self.time_data['time-time'])
 
         # post the data to the course submission form
-        response = self.client.post(
-            self.url, data=self.valid_data, follow=True)
+        self.client.post(self.url, data=self.valid_data, follow=True)
 
         # check that the time object got deleted
         self.assertFalse(Time.objects.filter(pk=time.pk).exists())
@@ -725,7 +724,6 @@ class CourseTestCase(TestCase):
         course_list_url = reverse(
             'course-list', kwargs={'branch_slug': branch.slug})
         response = self.client.get(course_list_url)
-        #self.assertNotContains(response, 'Past') NOTE: not implemented yet -Or
 
         # past courses url
         url = reverse(
@@ -773,6 +771,6 @@ class CourseTestCase(TestCase):
 def build_time(branch, start_time):
     one_hour = timedelta(hours=1)
     return Time(
-            branch=branch,
-            start_time=start_time,
-            end_time=start_time + one_hour)
+        branch=branch,
+        start_time=start_time,
+        end_time=start_time + one_hour)

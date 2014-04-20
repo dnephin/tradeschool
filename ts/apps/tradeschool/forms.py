@@ -53,9 +53,9 @@ class TimeSelectionForm(forms.Form):
     def __init__(self, branch, **kwargs):
         super(TimeSelectionForm, self).__init__(**kwargs)
         self.fields['time'].queryset = Time.objects.filter(
-                branch=branch,
-                is_active=True,
-                start_time__gt=datetime.datetime.now())
+            branch=branch,
+            is_active=True,
+            start_time__gt=datetime.datetime.now())
 
     time = TimeModelChoiceField(
         queryset=None,
@@ -120,7 +120,8 @@ class OrganizerForm(TeacherForm):
         self.fields['names_of_co_organizers'].error_messages['required'] = _(
             "Please enter the names of at least one or two more organizers")
         self.fields['bio'].error_messages['required'] = _(
-            "Please tell us about why you would like to open a Trade School in your area")
+            "Please tell us about why you would like to open a Trade School "
+            "in your area")
 
     class Meta:
         model = Person
@@ -139,7 +140,8 @@ class OrganizerForm(TeacherForm):
     )
     bio = forms.CharField(
         required=True,
-        label=_("A few sentences about why your group wants to open a Trade School"),
+        label=_("A few sentences about why your group wants to open a "
+                "Trade School"),
         widget=forms.Textarea
     )
 
